@@ -18,13 +18,10 @@ public class Client {
         this.phone = phone;
     }
 
-    public Reservation reserveTable(@NotNull Table table, @NotNull LocalDateTime startTime){
-        Reservation tmpReservation = Reservation.tryToReserve(this, table, startTime);
+    public Reservation reserveTable(@NotNull Cook cook, @NotNull LocalDateTime startTime) throws Exception {
 
-        if (tmpReservation == null)
-            System.out.println("Reservation failed");
 
-        return tmpReservation;
+        return Reservation.tryToReserve(this, cook, startTime);
     }
 
     public void removeReservation(@NotNull Reservation reservation){

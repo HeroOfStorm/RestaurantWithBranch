@@ -3,39 +3,41 @@ package com.company;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class Reservation {
-    private static final Set<Reservation> allReservations = new HashSet<>();
+    private static final Set<Reservation> allReservations = new TreeSet<>(Comparator.comparing(t -> t.startTime));
     private static final double reservationCost = 25;
     private LocalDateTime startTime;
     private final LocalDateTime endTime;
     private final Client client;
-    private final Table table;
-    private final double price;
+    private final Cook cook;
+    private double price;
 
 
-    private Reservation(@NotNull Client client, @NotNull Table table, @NotNull LocalDateTime startTime) {
+    private Reservation(@NotNull Client client, @NotNull Cook cook, @NotNull LocalDateTime startTime) throws Exception {
         this.client = client;
-        this.table = table;
+        this.cook = cook;
         this.startTime = startTime;
         this.endTime = this.startTime.plusHours(2);
         if (this.client.getReservations().size()>2)
-            price = reservationCost - (reservationCost*0.2);
+            setPrice(reservationCost - (reservationCost*0.2));
         else
-            price = reservationCost;
+            setPrice(reservationCost);
     }
 
-    public static Reservation tryToReserve(@NotNull Client client, @NotNull Table table, @NotNull LocalDateTime startTime) {
-        Reservation reservation = new Reservation(client, table, startTime);
+    public static Reservation tryToReserve(@NotNull Client client, @NotNull Cook cook, @NotNull LocalDateTime startTime) throws Exception {
+        Reservation reservation = new Reservation(client, cook, startTime);
         if (!allReservations.contains(reservation)){
             allReservations.add(reservation);
-            reservation.table.addReservation(reservation);
+            reservation.cook.addReservation(reservation);
             reservation.client.addReservation(reservation);
             return reservation;
         }
-        return null;
+        else
+            throw new Exception("This time is already reserved");
     }
 
     public static void removeReservation(@NotNull Reservation reservation) {
@@ -56,6 +58,13 @@ public class Reservation {
         return price;
     }
 
+    public void setPrice(double price) throws Exception {
+        if(price > 0)
+            this.price = price;
+        else
+            throw new Exception("price can't be set to  0($)");
+    }
+
     public LocalDateTime getEndTime() {
         return endTime;
     }
@@ -68,8 +77,8 @@ public class Reservation {
         return allReservations;
     }
 
-    public Table getTable() {
-        return table;
+    public Cook getTable() {
+        return cook;
     }
 
     @Override
@@ -78,7 +87,7 @@ public class Reservation {
                 "startTime=" + startTime +
                 ", endTime=" + endTime +
                 ", client=" + client +
-                ", table=" + table +
+                ", table=" + cook +
                 ", price=" + price +
                 "}\n";
     }
@@ -91,7 +100,7 @@ public class Reservation {
         Reservation reservation = (Reservation) obj;
         return ((this.startTime.isBefore(reservation.getEndTime()) && this.startTime.isAfter(reservation.getStartTime())) &&
                 (this.endTime.isBefore(reservation.getEndTime()) && this.endTime.isAfter(reservation.getStartTime()) )) &&
-                this.table.equals(reservation.getTable()) &&
+                this.cook.equals(reservation.getTable()) &&
                 this.price == reservation.getPrice();
     }
 
